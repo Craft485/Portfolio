@@ -1,0 +1,44 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    /* overscroll-behavior: none; */
+    /* Fall back */
+    background: grey;
+    /* https://cssgradient.io/ */
+    background: radial-gradient(circle, rgba(168,219,221,1) 0%, rgba(64,101,106,1) 50%, rgba(22,60,61,1) 100%);;
+    color: black;
+}
+
+section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: inherit;
+}
+
+h2 {
+    margin-top: 0;
+}
+
+h2:hover {
+    cursor: default;
+}
+
+a {
+    color: inherit;
+}
+
+.link {
+    text-decoration: none;
+    border: inset medium black;
+    width: fit-content;
+    padding: 5px;
+    margin: 10px;
+}
+
+#header, #button-container, #subtext {
+    width: fit-content;
+}

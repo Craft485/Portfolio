@@ -4,34 +4,50 @@ import { Controller } from './controller'
 import './styles.css'
 import './scene.json'
 
-// init
-const blocker = document.getElementById('blocker')
+class App {
+	blocker: HTMLElement
+	camera: THREE.Camera
+	scene: THREE.Scene | any
+	controller: Controller
+	previousRAF: number
+	renderer: THREE.WebGLRenderer
+	constructor (blocker: HTMLElement) {
+		this.blocker = blocker
+		this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 2000)
+		this.scene = null
+		this.controller = new Controller(this.camera, document.body, this.blocker)
+		this.previousRAF = null
+		this.renderer = new THREE.WebGLRenderer( { antialias: true } )
+		this.init()
+	}
 
-const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 2000)
-camera.position.y = 3
-// @ts-expect-error using top level await with es5 target
-const scene: THREE.Scene = await levelLoader('scene')
+	async init() {
+		// Fix camera pos
+		this.camera.position.y = 3
 
-const renderer = new THREE.WebGLRenderer( { antialias: true } )
-renderer.setSize( window.innerWidth, window.innerHeight )
-document.body.appendChild( renderer.domElement )
+		this.scene = await levelLoader('scene')
 
-const controller = new Controller(camera, document.body, blocker)
+		this.renderer.setSize(window.innerWidth, window.innerHeight)
+		document.body.appendChild(this.renderer.domElement)
 
-let previousRAF: number | null = null
+		this.blocker.onclick = () => { this.controller.controls.lock() }
+		this.RAF()
+	}
 
-function raf() {
-	requestAnimationFrame((t) => {
-		if (previousRAF === null) previousRAF = t
-
-		controller.update()
-		renderer.render(scene, camera)
-		previousRAF = t
-		raf()
-	})
+	RAF() {
+		requestAnimationFrame((t) => {
+			if (this.previousRAF === null) this.previousRAF = t
+	
+			this.controller.update()
+			this.renderer.render(this.scene, this.camera)
+			this.previousRAF = t
+			this.RAF()
+		})
+	}
 }
 
+var __APP__: App = null
+
 window.onload = () => {
-	raf()
-	blocker.onclick = () => { controller.controls.lock() }
+	__APP__ = new App(document.getElementById('blocker'))
 }

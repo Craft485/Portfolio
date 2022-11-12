@@ -4,7 +4,7 @@ import * as THREE from 'three'
  * Load level data from json file
  * @param {string} levelName Name of the level(not the file) Ex: 'debug' will load level data from 'debug_leveldata.json'
  */
-export async function levelLoader(levelName: string) {
+export async function levelLoader(levelName: string): Promise<any> {
     const d = await new Promise(async (resolve) => {
         const loader = new THREE.ObjectLoader()
         await loader.load(

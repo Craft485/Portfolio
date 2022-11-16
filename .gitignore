@@ -1,4 +1,5 @@
 node_modules 
 *.test.* 
 test 
-dist
+colindavis/three-view/dist/*
+!colindavis/three-view/dist/index.html

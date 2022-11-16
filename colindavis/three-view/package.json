@@ -2,9 +2,10 @@
   "name": "webpack-three-demo",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "private": true,
   "scripts": {
-    "build": "webpack"
+    "build": "webpack",
+    "setup": "cp src/scene.json dist && cp src/text-data.json dist && npm i && echo You may want to set \"mode\" in webpack.config.js to \"production\" for ease of debugging this mess."
   },
   "keywords": [],
   "author": "Craft485",

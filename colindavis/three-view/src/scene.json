@@ -106,7 +106,7 @@
 			"thetaLength": 6.283185307179586
 		},
 		{
-			"uuid": "51aece78-24cd-407e-be2c-2c39c0e4a427",
+			"uuid": "589853e1-4e78-4d5a-a270-1eea7458f58a",
 			"type": "RingGeometry",
 			"innerRadius": 0.5,
 			"outerRadius": 1,
@@ -116,14 +116,12 @@
 			"thetaLength": 6.283185307179586
 		},
 		{
-			"uuid": "589853e1-4e78-4d5a-a270-1eea7458f58a",
-			"type": "RingGeometry",
-			"innerRadius": 0.5,
-			"outerRadius": 1,
-			"thetaSegments": 8,
-			"phiSegments": 1,
-			"thetaStart": 0,
-			"thetaLength": 6.283185307179586
+			"uuid": "b9b1389a-1f0b-4506-9b62-0fd2c0355b34",
+			"type": "PlaneGeometry",
+			"width": 1,
+			"height": 1,
+			"widthSegments": 1,
+			"heightSegments": 1
 		}],
 	"materials": [
 		{
@@ -174,7 +172,7 @@
 			"color": 16777215,
 			"roughness": 1,
 			"metalness": 0,
-			"emissive": 16777215,
+			"emissive": 0,
 			"envMapIntensity": 1,
 			"depthFunc": 3,
 			"depthTest": true,
@@ -316,7 +314,7 @@
 			"stencilZPass": 7680
 		},
 		{
-			"uuid": "62ef428b-2fcf-47d3-bf88-f0076b42e1e2",
+			"uuid": "3556fe7b-294c-4be4-ba35-d6625385822c",
 			"type": "MeshStandardMaterial",
 			"color": 16777215,
 			"roughness": 1,
@@ -337,13 +335,14 @@
 			"stencilZPass": 7680
 		},
 		{
-			"uuid": "3556fe7b-294c-4be4-ba35-d6625385822c",
+			"uuid": "667c8ed5-9f86-47b1-9a64-3f6961ced4e9",
 			"type": "MeshStandardMaterial",
 			"color": 16777215,
 			"roughness": 1,
 			"metalness": 0,
 			"emissive": 0,
 			"envMapIntensity": 1,
+			"side": 2,
 			"depthFunc": 3,
 			"depthTest": true,
 			"depthWrite": true,
@@ -381,9 +380,9 @@
 				"name": "HemisphereLight",
 				"layers": 1,
 				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,15,0,1],
-				"color": 16777215,
+				"color": 7368816,
 				"intensity": 1,
-				"groundColor": 16777215
+				"groundColor": 6513507
 			},
 			{
 				"uuid": "be73d16b-45ad-4395-8942-2adba351939c",
@@ -392,8 +391,8 @@
 				"castShadow": true,
 				"layers": 1,
 				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,10,0,1],
-				"color": 16777215,
-				"intensity": 0.25,
+				"color": 0,
+				"intensity": 0.5,
 				"distance": 0,
 				"decay": 1,
 				"shadow": {
@@ -463,8 +462,8 @@
 				"castShadow": true,
 				"layers": 1,
 				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,10,-30,1],
-				"color": 16777215,
-				"intensity": 0.25,
+				"color": 0,
+				"intensity": 0.5,
 				"distance": 0,
 				"decay": 1,
 				"shadow": {
@@ -490,8 +489,8 @@
 				"castShadow": true,
 				"layers": 1,
 				"matrix": [1,0,0,0,0,1,0,0,0,0,1,0,0,10,30,1],
-				"color": 16777215,
-				"intensity": 0.25,
+				"color": 0,
+				"intensity": 0.5,
 				"distance": 0,
 				"decay": 1,
 				"shadow": {
@@ -551,15 +550,6 @@
 				"material": "803294eb-cfa1-47b7-983b-01d0caca3502"
 			},
 			{
-				"uuid": "84634d27-df16-44b5-857f-f151eff4699c",
-				"type": "Mesh",
-				"name": "Ring",
-				"layers": 1,
-				"matrix": [4.440892098500626e-16,0,2,0,0,2,0,0,-1,0,2.220446049250313e-16,0,15,5,-15,1],
-				"geometry": "51aece78-24cd-407e-be2c-2c39c0e4a427",
-				"material": "62ef428b-2fcf-47d3-bf88-f0076b42e1e2"
-			},
-			{
 				"uuid": "15bb57c5-c288-4388-a54d-e0be8283ddf7",
 				"type": "Mesh",
 				"name": "Ring",
@@ -567,6 +557,15 @@
 				"matrix": [4.440892098500626e-16,0,2,0,0,2,0,0,-1,0,2.220446049250313e-16,0,15,5,15,1],
 				"geometry": "589853e1-4e78-4d5a-a270-1eea7458f58a",
 				"material": "3556fe7b-294c-4be4-ba35-d6625385822c"
+			},
+			{
+				"uuid": "5d1212ae-bc38-4f19-b021-bf0f2796c305",
+				"type": "Mesh",
+				"name": "TEXTPLACEHOLDER",
+				"layers": 1,
+				"matrix": [3.3306690738754696e-15,0,15,0,0,10,0,0,-1,0,2.220446049250313e-16,0,15,7.5,-15,1],
+				"geometry": "b9b1389a-1f0b-4506-9b62-0fd2c0355b34",
+				"material": "667c8ed5-9f86-47b1-9a64-3f6961ced4e9"
 			}],
 		"fog": {
 			"type": "FogExp2",

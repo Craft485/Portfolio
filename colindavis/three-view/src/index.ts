@@ -8,7 +8,7 @@ import './scene.json'
 class App {
 	blocker: HTMLElement
 	camera: THREE.Camera
-	scene: THREE.Scene | any
+	scene: THREE.Scene
 	controller: Controller
 	previousRAF: number
 	renderer: THREE.WebGLRenderer
@@ -35,6 +35,17 @@ class App {
 
 		this.renderer.setSize(window.innerWidth, window.innerHeight)
 		document.body.appendChild(this.renderer.domElement)
+
+		// This should be optimized later with the scene data meshes using userData#group
+		for (const object of this.scene.children) {
+			// @ts-ignore
+			if (object?.geometry?.type === 'CylinderGeometry' || object.userData?.group === 1) {
+				console.log('controller objects')
+				this.controller.objects.push(object)
+			}
+		}
+
+		console.log(this.controller.objects)
 
 		this.blocker.onclick = () => { this.controller.controls.lock() }
 		this.RAF()

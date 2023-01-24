@@ -12,6 +12,7 @@ export class Controller {
     velocity: THREE.Vector3
     direction: THREE.Vector3
     raycaster: THREE.Raycaster
+    frontFacingRaycaster: THREE.Raycaster
     objects: Array<any>
     constructor(camera: THREE.Camera, domElement: HTMLElement, blocker: HTMLElement, instructions?: HTMLElement) {
         this.camera = camera
@@ -29,6 +30,7 @@ export class Controller {
         this.velocity = new THREE.Vector3()
         this.direction = new THREE.Vector3()
         this.raycaster = new THREE.Raycaster()
+        this.frontFacingRaycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(), 0, 0.75)
         this.objects = []
         this.init()
     }
@@ -100,8 +102,23 @@ export class Controller {
     update(): void {
         const time = performance.now()
 
-        if (this.controls.isLocked === true) {
+        if (this.controls.isLocked) {
             this.raycaster.ray.origin.copy(this.controls.getObject().position)
+
+            this.frontFacingRaycaster.ray.origin.copy(this.controls.getObject().position)
+
+            // Setup to be relative to the camera which looks down its own internal negative z-axis
+            // https://stackoverflow.com/questions/15696963/three-js-set-and-read-camera-look-vector/15697227#15697227
+            const cameraLookAtVector = new THREE.Vector3(0, 0, -1)
+            cameraLookAtVector.applyQuaternion(this.controls.getObject().quaternion)
+            this.frontFacingRaycaster.ray.direction.copy(cameraLookAtVector.normalize())
+
+            // I don't think recasting is actually necessary, just set the far value when initializing the raycaster
+            // this.frontFacingRaycaster.ray.recast(0.5)
+            const frontalIntersections = this.frontFacingRaycaster.intersectObjects(this.objects, false)
+
+            const walkingIntoObject = frontalIntersections.length > 0
+
             this.raycaster.ray.origin.y -= 3
 
             const intersections = this.raycaster.intersectObjects(this.objects, false)
@@ -124,7 +141,9 @@ export class Controller {
             if (this.directions.moveForward || this.directions.moveBackward) this.velocity.z -= this.direction.z * 200.0 * delta
             if (this.directions.moveLeft || this.directions.moveRight) this.velocity.x -= this.direction.x * 200.0 * delta
 
-            if (onObject === true) this.velocity.y = Math.max(0, this.velocity.y)
+            if (onObject) this.velocity.y = Math.max(0, this.velocity.y)
+
+            if (walkingIntoObject) this.velocity = new THREE.Vector3(0, this.velocity.y, 0)
 
             this.controls.moveRight(-this.velocity.x * delta)
             this.controls.moveForward(-this.velocity.z * delta)

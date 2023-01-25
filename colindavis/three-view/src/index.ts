@@ -6,6 +6,7 @@ import './styles.css'
 import './scene.json'
 
 class App {
+	collisionGeometryNames: Array<string>
 	blocker: HTMLElement
 	camera: THREE.Camera
 	scene: THREE.Scene
@@ -14,6 +15,7 @@ class App {
 	renderer: THREE.WebGLRenderer
 	textLoader: TextLoader
 	constructor (blocker: HTMLElement) {
+		this.collisionGeometryNames = ['CylinderGeometry', 'PlaneGeometry', 'BoxGeometry']
 		this.blocker = blocker
 		this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 2000)
 		this.scene = null
@@ -36,10 +38,10 @@ class App {
 		this.renderer.setSize(window.innerWidth, window.innerHeight)
 		document.body.appendChild(this.renderer.domElement)
 
-		// This should be optimized later with the scene data meshes using userData#group
+		// This whitelist array should be defined globally later
 		for (const object of this.scene.children) {
-			// @ts-ignore
-			if (object?.geometry?.type === 'CylinderGeometry' || object.userData?.group === 1) {
+			// @ts-ignore THREE.Object3D<THREE.Event> doesn't include geometry
+			if (this.collisionGeometryNames.includes(object?.geometry?.type)) {
 				console.log('controller objects')
 				this.controller.objects.push(object)
 			}

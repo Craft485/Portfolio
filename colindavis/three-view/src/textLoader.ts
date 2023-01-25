@@ -31,7 +31,6 @@ export class TextLoader {
         const loader = new FontLoader()
         const path = window.location.hostname.includes('net') ? './droid_sans_mono_regular.typeface.json' : '../node_modules/three/examples/fonts/droid/droid_sans_mono_regular.typeface.json'
         loader.load(path, (res) => {
-            console.log(res)
             this.font = res
             // Grab two pillars right next to each other to do some math later
             // const pillarIndex = this.scene.children.findIndex(mesh => mesh.name.toLowerCase() === 'p1')
@@ -39,14 +38,9 @@ export class TextLoader {
             const p1: THREE.Mesh<THREE.CylinderGeometry, THREE.Material> = this.scene.children.find((mesh) => mesh.name.toUpperCase() === 'P1')
             // @ts-ignore
             const p2: THREE.Mesh<THREE.CylinderGeometry, THREE.Material> = this.scene.children.find((mesh) => mesh.name.toUpperCase() === 'P2')
-            console.log(this.scene)
-            console.log(p1)
-            console.log(p2)
             const openSpaceBetweenPillars = Math.abs(Math.abs(p1.position.z) - Math.abs(p2.position.z)) - (2 * p1.geometry.parameters.radiusTop)
-            console.log(openSpaceBetweenPillars)
             
             this.textData.forEach((text: string, index: number) => {
-                console.log(`this.font at forEach: ${this.font}`)
                 const g = new TextGeometry(text, {
                     font: this.font,
                     size: 0.5,
@@ -69,9 +63,6 @@ export class TextLoader {
 
                 const offsetFromPillar = p1.geometry.parameters.radiusTop + paddingBetweenTextAndPillar
                 mesh.position.z += mesh.rotation.y < 0 ? offsetFromPillar : -offsetFromPillar
-
-                console.log(`Geo Width: ${textGeoWidth}`)
-                console.log(`Padding: ${paddingBetweenTextAndPillar}`)
                 
                 this.scene.add(mesh)
                 // @ts-ignore

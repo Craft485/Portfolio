@@ -36,10 +36,8 @@ export class Controller {
     }
 
     init(): void {
-        console.log(this.blocker, this.instructions)
         // NOTE: These callbacks and event listener functions must be arrow functions due to that fact they don't redefine their own scope of "this"
         this.controls.addEventListener('lock', () => {
-            // console.log(this.blocker)
             // this.instructions.style.display = 'none'
             this.blocker.style.display = 'none'
         } )
@@ -113,8 +111,6 @@ export class Controller {
             cameraLookAtVector.applyQuaternion(this.controls.getObject().quaternion)
             this.frontFacingRaycaster.ray.direction.copy(cameraLookAtVector.normalize())
 
-            // I don't think recasting is actually necessary, just set the far value when initializing the raycaster
-            // this.frontFacingRaycaster.ray.recast(0.5)
             const frontalIntersections = this.frontFacingRaycaster.intersectObjects(this.objects, false)
 
             const walkingIntoObject = frontalIntersections.length > 0

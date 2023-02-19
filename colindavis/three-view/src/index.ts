@@ -27,10 +27,14 @@ class App {
 	}
 
 	async init() {
-		// Fix camera pos
-		this.camera.position.y = 3
-
 		this.scene = await levelLoader('scene')
+
+		// @ts-ignore Adding specific type def onto capsule
+		const capsule: THREE.Mesh<THREE.CapsuleGeometry, THREE.Material> = this.scene.children.find(child => child.name.toLowerCase().includes('capsule'))
+		this.camera.position.copy(capsule.position)
+		capsule.geometry.dispose()
+		capsule.material.dispose()
+		capsule.removeFromParent()
 
 		this.textLoader = new TextLoader(this.scene)
 		this.textLoader.load()
@@ -43,7 +47,7 @@ class App {
 			// @ts-ignore THREE.Object3D<THREE.Event> doesn't include geometry
 			if (this.collisionGeometryNames.includes(object?.geometry?.type)) {
 				console.log('controller objects')
-				this.controller.objects.push(object)
+				this.controller.objects.push(object as any)
 			}
 		}
 

@@ -6,20 +6,34 @@ export class Controller {
     domElement: HTMLElement
     controls: PointerLockControls
     blocker: HTMLElement
-    instructions: HTMLElement
-    directions: { moveForward: boolean, moveBackward: boolean, moveLeft: boolean, moveRight: boolean }
+    directions: {
+        moveForward: boolean,
+        moveBackward: boolean,
+        moveLeft: boolean,
+        moveRight: boolean
+    }
     prevTime: number
     velocity: THREE.Vector3
     direction: THREE.Vector3
-    raycaster: THREE.Raycaster
-    frontFacingRaycaster: THREE.Raycaster
-    objects: Array<any>
+    objects: Array<THREE.Mesh>
+    collider: {
+        [key: string]: {
+            raycaster: THREE.Raycaster
+            // Same as raycaster but angled towards the ground to detect short obstacles
+            // NOTE: Do not init the raycasters position as the cameras position, it needs to be copied into an empty Vec3 to avoid passing object references
+            angledRaycaster: THREE.Raycaster
+            // originalDirection is for raycaster, NOT for angledRaycaster
+            originalDirection: THREE.Vector3
+            collision: boolean
+        }
+    }
+    elevationRaycaster: THREE.Raycaster
+    gravity: THREE.Raycaster
     constructor(camera: THREE.Camera, domElement: HTMLElement, blocker: HTMLElement, instructions?: HTMLElement) {
         this.camera = camera
         this.domElement = domElement
         this.controls = new PointerLockControls(this.camera, this.domElement)
         this.blocker = blocker || null
-        this.instructions = instructions || null
         this.directions = {
             moveForward: false,
             moveBackward: false,
@@ -29,22 +43,46 @@ export class Controller {
         this.prevTime = performance.now()
         this.velocity = new THREE.Vector3()
         this.direction = new THREE.Vector3()
-        this.raycaster = new THREE.Raycaster()
-        this.frontFacingRaycaster = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(), 0, 0.75)
         this.objects = []
+        this.collider = {
+            North: {
+                raycaster: new THREE.Raycaster(this.camera.position, new THREE.Vector3(0, 0, -1), 0, 1),
+                angledRaycaster: new THREE.Raycaster(new THREE.Vector3().copy(this.camera.position), new THREE.Vector3(0, -1, -1), 0, 1),
+                originalDirection: new THREE.Vector3(0, 0, -1),
+                collision: false
+            },
+            East: {
+                raycaster: new THREE.Raycaster(this.camera.position, new THREE.Vector3(1, 0, 0), 0, 1),
+                angledRaycaster: new THREE.Raycaster(new THREE.Vector3().copy(this.camera.position), new THREE.Vector3(1, -1, 0), 0, 1),
+                originalDirection: new THREE.Vector3(1, 0, 0),
+                collision: false
+            },
+            South: {
+                raycaster: new THREE.Raycaster(this.camera.position, new THREE.Vector3(0, 0, 1), 0, 1),
+                angledRaycaster: new THREE.Raycaster(new THREE.Vector3().copy(this.camera.position), new THREE.Vector3(0, -1, 1), 0, 1),
+                originalDirection: new THREE.Vector3(0, 0, 1),
+                collision: false
+            },
+            West: {
+                raycaster: new THREE.Raycaster(this.camera.position, new THREE.Vector3(-1, 0, 0), 0, 1),
+                angledRaycaster: new THREE.Raycaster(new THREE.Vector3().copy(this.camera.position), new THREE.Vector3(-1, -1, 0), 0, 1),
+                originalDirection: new THREE.Vector3(-1, 0, 0),
+                collision: false
+            }
+        }
+        this.elevationRaycaster = new THREE.Raycaster(camera.position, new THREE.Vector3(0, -1, 0), 0, 3)
+        this.gravity = new THREE.Raycaster(camera.position, new THREE.Vector3(0, -1, 0), 0)
         this.init()
     }
 
     init(): void {
         // NOTE: These callbacks and event listener functions must be arrow functions due to that fact they don't redefine their own scope of "this"
         this.controls.addEventListener('lock', () => {
-            // this.instructions.style.display = 'none'
             this.blocker.style.display = 'none'
-        } )
+        })
 
         this.controls.addEventListener('unlock', () => {
             this.blocker.style.display = 'flex'
-            // this.instructions.style.display = ''
         })
 
         const onKeyDown = (event: KeyboardEvent) => {
@@ -97,59 +135,81 @@ export class Controller {
         document.addEventListener('keyup', onKeyUp)
     }
 
+    checkCollider(): void {
+        const cameraLookAtDirection = this.controls.getDirection(new THREE.Vector3())
+
+        for (const direction in this.collider) {
+            const collider = this.collider[direction]
+            // offsetScalar basically makes sure that straight ahead is seen as position 0 and the positive direction is to our left, negative is to our right
+            const offsetScalar = new THREE.Vector3().copy(collider.originalDirection).negate().toArray().filter(Boolean)[0]
+
+            const trueAngle = this.collider.North.originalDirection.angleTo(collider.originalDirection)
+            const resultant = new THREE.Vector3().copy(cameraLookAtDirection).setY(0).applyAxisAngle(new THREE.Vector3(0, 1, 0), trueAngle).multiplyScalar(Math.abs(Math.floor(trueAngle)) === 1 ? offsetScalar : 1)
+
+            collider.raycaster.ray.direction.copy(resultant)
+            collider.raycaster.ray.origin.copy(this.controls.getObject().position)
+            collider.angledRaycaster.ray.direction.setX(resultant.x)
+            collider.angledRaycaster.ray.direction.setZ(resultant.z)
+            collider.angledRaycaster.ray.origin.copy(this.controls.getObject().position)
+            collider.angledRaycaster.ray.origin.setY(this.camera.position.y - 1)
+
+            const intersections = collider.raycaster.intersectObjects(this.objects, false)
+            const angledIntersections = collider.angledRaycaster.intersectObjects(this.objects, false)
+            this.collider[direction].collision = intersections.length > 0 || angledIntersections.length > 0
+        }
+    }
+
     update(): void {
         const time = performance.now()
 
         if (this.controls.isLocked) {
-            this.raycaster.ray.origin.copy(this.controls.getObject().position)
-
-            this.frontFacingRaycaster.ray.origin.copy(this.controls.getObject().position)
-
-            // Setup to be relative to the camera which looks down its own internal negative z-axis
-            // https://stackoverflow.com/questions/15696963/three-js-set-and-read-camera-look-vector/15697227#15697227
-            const cameraLookAtVector = new THREE.Vector3(0, 0, -1)
-            cameraLookAtVector.applyQuaternion(this.controls.getObject().quaternion)
-            this.frontFacingRaycaster.ray.direction.copy(cameraLookAtVector.normalize())
-
-            const frontalIntersections = this.frontFacingRaycaster.intersectObjects(this.objects, false)
-
-            const walkingIntoObject = frontalIntersections.length > 0
-
-            this.raycaster.ray.origin.y -= 3
-
-            const intersections = this.raycaster.intersectObjects(this.objects, false)
-
-            const onObject = intersections.length > 0
+            this.checkCollider()
 
             const delta = (time - this.prevTime) / 1000
 
             this.velocity.x -= this.velocity.x * 10.0 * delta
             this.velocity.z -= this.velocity.z * 10.0 * delta
 
-            // 100.0 = mass
-            this.velocity.y -= 9.8 * 100.0 * delta
-
             this.direction.z = Number(this.directions.moveForward) - Number(this.directions.moveBackward)
             this.direction.x = Number(this.directions.moveRight) - Number(this.directions.moveLeft)
+
             // This ensures consistent movements in all directions
             this.direction.normalize()
 
             if (this.directions.moveForward || this.directions.moveBackward) this.velocity.z -= this.direction.z * 200.0 * delta
             if (this.directions.moveLeft || this.directions.moveRight) this.velocity.x -= this.direction.x * 200.0 * delta
 
-            if (onObject) this.velocity.y = Math.max(0, this.velocity.y)
+            // Forward: z
+            // Backward: -z
+            // Left: -x
+            // Right: x
+            if ((this.directions.moveForward && this.collider.North.collision) || 
+            (this.directions.moveBackward && this.collider.South.collision)) {
+                this.direction.z = 0
+                this.velocity.z = 0
+            }
 
-            if (walkingIntoObject) this.velocity = new THREE.Vector3(0, this.velocity.y, 0)
-
+            if ((this.directions.moveLeft && this.collider.West.collision) || 
+            (this.directions.moveRight && this.collider.East.collision)) {
+                this.direction.x = 0
+                this.velocity.x = 0
+            }
+            
             this.controls.moveRight(-this.velocity.x * delta)
             this.controls.moveForward(-this.velocity.z * delta)
 
-            this.controls.getObject().position.y += (this.velocity.y * delta)
+            this.elevationRaycaster.ray.origin.copy(this.controls.getObject().position)
+            this.gravity.ray.origin.copy(this.controls.getObject().position)
 
-            if (this.controls.getObject().position.y < 3) {
-                this.velocity.y = 0
-                this.controls.getObject().position.y = 3
-            }
+            const intersectionsBelow = this.elevationRaycaster.intersectObjects(this.objects, false)
+            const gravityIntersection = this.gravity.intersectObjects(this.objects, false)
+
+            // TODO: Use acceleration due to gravity, clamp position based off this math of the line segments between the player and a lower surface?
+            const onObject = intersectionsBelow.length > 0
+            onObject && !intersectionsBelow[0].object.name.toLowerCase().includes('ground') ? this.camera.position.y += this.elevationRaycaster.far - intersectionsBelow[0].distance : this.camera.position.y -= gravityIntersection[0].distance - this.elevationRaycaster.far
+
+            // Ensure we don't fall through the floor
+            if (this.controls.getObject().position.y < 3) this.controls.getObject().position.y = 3
         }
 
         this.prevTime = time
